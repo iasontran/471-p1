@@ -2,10 +2,10 @@
 
 from freq import *
 
-def ioc(len):
+def ioc(file):
     #file = open(sys.argv[1], 'r')
     #ct = file.read()
-    ct = len
+    ct = file.read()
     icsum = 0.0
 
     n = len(ct)
