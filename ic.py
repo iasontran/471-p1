@@ -1,18 +1,16 @@
 #!/usr/bin/python
 
-import sys
 from freq import *
 
-
-def ic(freq):
-    file = open(sys.argv[1], 'r')
-    ct = file.read()
+def ioc(len):
+    #file = open(sys.argv[1], 'r')
+    #ct = file.read()
+    ct = len
     icsum = 0.0
 
     n = len(ct)
+    freqs = findnfreqs(ct, 1)
+    for x in freqs.values():
+        icsum += x * ((x * n - 1)/(n - 1))
 
-    for x in freq.values():
-        icsum += x * (n - 1)
-
-    index = icsum / (n * (n - 1))
-    return index
+    return icsum
