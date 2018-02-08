@@ -3,10 +3,10 @@
 from freq import *
 
 def ioc(file):
-    #file = open(sys.argv[1], 'r')
-    #ct = file.read()
+    # file = open(sys.argv[1], 'r')
+    # ct = file.read()
     ct = file.read()
-    file.seek(0,0)
+    file.seek(0, 0)
     icsum = 0.0
 
     n = len(ct)

@@ -1,24 +1,46 @@
+import sys
 
-def kasiski():
 
-    return kas
+alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-def vignere():
+def shift(freqs, file):
+    ctx = file.read()
+    file.seek(0, 0)
+    key = guess_key(freqs)
 
-    return vig
+    ptx = ""
+    for letter in ctx:
+        index = alphabet.find(letter)
+        new_index = flat(index - key)
+        ptx += alphabet[new_index]
 
-def shift():
+    return ptx
 
-    return shift
+def guess_key(freqs):
+    most_common = 4  # letter E
+    second_item = [seq[1] for seq in freqs]
+    key = alphabet.find(second_item[0]) - most_common
+    return key
 
-def sub():
+def flat(num):
+    return num - (26 * (num // 26))
 
-    return sub
-
-def pad():
-
-    return pad
-
-def perm():
-
-    return perm
+# def kasiski():
+#
+#     return kas
+#
+# def vignere():
+#
+#     return vig
+#
+# def sub():
+#
+#     return sub
+#
+# def pad():
+#
+#     return pad
+#
+# def perm():
+#
+#     return perm
