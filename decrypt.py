@@ -1,11 +1,15 @@
-import sys
 from ic import *
 from operator import itemgetter
-import string
 from collections import Counter
+from itertools import zip_longest
 
 
 alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+top_five_common = "ETAOI"
+ic_eng = 0.066895
+
+
+"""Shift cipher related functions"""
 
 
 def shift(freqs, file):
@@ -33,27 +37,96 @@ def flat(num):
     return num - (26 * (num // 26))
 
 
-def vigenere(freqs, file, ioc):
+"""Vigenere cipher related functions"""
+
+
+def vigenere(file, index_of_coincidence):
     """Consider cipher is polyalphabetic """
     ctx = file.read()
     file.seek(0, 0)
 
-    ic_eng = 0.066895
-
-    periods = period_attempt(ctx, ic_eng, ioc)
+    periods = period_attempt(ctx, index_of_coincidence)
     init_period = periods[0][0]
-    key, ptx = vigenere_decrypt(ctx, ic_eng, init_period)
+    key, ptx = vigenere_decrypt(ctx, init_period)
 
     return key, ptx
 
 
-def vigenere_decrypt(ctx, ic_eng, period):
+def vigenere_decrypt(ctx, period):
     """Decryption/cracking process for Vigenere ciphertext"""
+    subseq = [[] for i in range(period)]
+    for position, letter in enumerate(ctx):
+        subseq[position % period].append(letter)
 
-    return key, ptx
+    subseq = [''.join(subsequence) for subsequence in subseq]
+    key = ""
+    subseq_dec = ['' for _ in subseq]
+
+    for i_sub, subsequence in enumerate(subseq):
+
+        most_common_ctx = Counter(subsequence).most_common(5)
+        most_common_ctx.sort(key=itemgetter(1, 0), reverse=True)
+
+        most_common_ptx = top_five_common[0]
+        most_common_ptx_enc_cnt = []
+
+        for i_letter, letter in enumerate(most_common_ctx):
+
+            most_common_ptx_enc = most_common_ctx[i_letter][0]
+
+            offset = (alphabet.index(most_common_ptx_enc) - alphabet.index(most_common_ptx)) % 26
+
+            matching = 0
+
+            for letter_ctx in most_common_ctx:
+
+                alpha_pos = alphabet.index(letter_ctx[0])
+                letter_dec = alphabet[(alpha_pos - offset) % 26]
+
+                if letter_dec in top_five_common:
+                    matching += 1
+                    most_common_ptx_enc_cnt.append((most_common_ptx_enc, matching))
+
+        """"""
+        most_common_ptx_enc_cnt.sort(key=itemgetter(1), reverse=True)
+        matching_tot = sum([matching for _, matching in most_common_ptx_enc_cnt])
+        most_common_ptx_enc_cnt = [(letter, "{0:.2f}%".format(100 * match/matching_tot))
+                                   for letter, match in most_common_ptx_enc_cnt]
+
+        most_common_ptx_enc = most_common_ptx_enc_cnt[0][0]
+
+        offset = alphabet.index(most_common_ptx_enc) - alphabet.index(most_common_ptx) % 26
+
+        letter_key = alphabet[offset - 1]
+        key += letter_key
+
+        subsequence_dec = subsequence
+
+        for position, letter in enumerate(alphabet):
+            subsequence_dec = subsequence_dec.replace(letter, alphabet[(position - offset) % 26].lower())
+
+        subseq_dec[i_sub] = subsequence_dec
+
+    subseq_dec_mix = zip_longest(*subseq_dec, fillvalue='')
+    subseq_dec_mix = [''.join(subsequence_mix) for subsequence_mix in subseq_dec_mix]
+
+    ptx = ''.join(subseq_dec_mix)
+    ptx = rejoin(ptx, ctx)
+
+    return key, ptx.upper()
 
 
-def period_attempt(ctx, ic_eng, ic_ctx):
+def rejoin(ptx, ctx):
+
+    rejoined = list(ptx)
+    for position, letter in enumerate(ctx.upper()):
+        if letter not in alphabet:
+            rejoin(position, letter)
+
+    return ''.join(rejoined)
+
+
+def period_attempt(ctx, ic_ctx):
     """Attempt to guess periods in ciphertext"""
     kas = kasiski(ctx)
     kas.sort()
@@ -62,14 +135,14 @@ def period_attempt(ctx, ic_eng, ic_ctx):
     if not kas:
         return
 
-    periods = [period for period,  in kas]
-    ics = compute_periods_with_ic(ctx, ic_eng, ic_ctx)
+    periods = [period for period, _ in kas]
+    ics = compute_periods_with_ic(ctx, ic_ctx, periods)
     ics.sort()
 
-    guess_per = [(period, kas[i][1] + ics[i][1]) for i,period in enumerate(periods)]
+    guess_per = [(period, kas[i][1] + ics[i][1]) for i, period in enumerate(periods)]
 
-    guess_per.sort(key = itemgetter(1), reverse = True)
-    prob_tot = sum([prob for _,prob in guess_per])
+    guess_per.sort(key=itemgetter(1), reverse=True)
+    prob_tot = sum([prob for _, prob in guess_per])
     guess_per = [(period, "{0:.2f}%".format(100 * prob/prob_tot)) for period, prob in guess_per]
 
     return guess_per
@@ -121,15 +194,15 @@ def average_ic(ctx, per):
     subseq = [[] for i in range(per)]
 
     for position, letter in enumerate(ctx):
-        subseq[position % letter].append(letter)
+        subseq[position % per].append(letter)
 
     subseq = [''.join(subsequence) for subsequence in subseq]
-    average = sum([ioc(subsequence) for subsequence in subseq])/per
+    average = sum([ioc_subseq(subsequence) for subsequence in subseq])/per
 
     return float("{0:.6f}".format(average))
 
 
-def compute_periods_with_ic(ctx, ic_eng, ic_ctx, periods=None):
+def compute_periods_with_ic(ctx, ic_ctx, periods=None):
     """Compute periods given index of coincidence values"""
 
     if periods is None:
@@ -148,7 +221,7 @@ def compute_periods_with_ic(ctx, ic_eng, ic_ctx, periods=None):
 
     per_1 = [(period, (1/diff)/diff_tot_eng) for period, diff in diff_eng_ic]
     """Index of coincidence values across all periods"""
-    periods_ic = [(period, expected_ic(ctx, period, ic_eng)) for period in periods]
+    periods_ic = [(period, expected_ic(ctx, period)) for period in periods]
     """Difference between period IOC values and ciphertext IOC values"""
     diff_ctx_ic = [(period, abs(period_ic - ic_ctx)) for period, period_ic in periods_ic]
     """Total difference with regards to the ciphertext"""
@@ -167,23 +240,29 @@ def compute_periods_with_ic(ctx, ic_eng, ic_ctx, periods=None):
     return prob_period
 
 
-def expected_ic(ctx, per, ic_eng):
+def expected_ic(ctx, per):
     """Calculates the expected index of coincidence given a specified period"""
     return 1/per * (per - len(ctx))/(len(ctx) - 1) * ic_eng + (per - 1)/per * len(ctx)/(len(ctx) - 1) * 1/26
 
 
+"""Substitution cipher related functions"""
 #
 # def sub():
 #
 #     return sub
 #
 #
+"""One-time pad related functions"""
+
+
 # def pad():
 #
 #     return pad
 #
 #
+"""Permutation cipher related functions"""
+
+
 # def perm():
 #
 #     return perm
-
