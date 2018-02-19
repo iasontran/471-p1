@@ -3,6 +3,7 @@ from operator import itemgetter
 from collections import Counter
 from itertools import zip_longest
 
+import math
 
 alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 top_five_common = "ETAOI"
@@ -22,9 +23,8 @@ def shift(freqs, file):
         index = alphabet.find(letter)
         new_index = flat(index - key)
         ptx += alphabet[new_index]
-    # key = alphabet[key]
 
-    return key, ptx
+    return ptx
 
 
 def guess_key(freqs):
@@ -172,11 +172,11 @@ def kasiski(ctx):
         return
 
     kas = []
-    for n_gram, occur in ngram:
+    for ngram, occur in ngram:
         next_pos = 0
         for i in range(occur - 1):
-            curr_pos = ctx.find(n_gram, next_pos)
-            next_pos = ctx.find(n_gram, curr_pos + 1)
+            curr_pos = ctx.find(ngram, next_pos)
+            next_pos = ctx.find(ngram, next_pos + 1)
             dist = next_pos - curr_pos
 
             for period in range(2, dist + 1):
@@ -243,27 +243,75 @@ def compute_periods_with_ic(ctx, ic_ctx, periods=None):
 
 def expected_ic(ctx, per):
     """Calculates the expected index of coincidence given a specified period"""
-    return 1/per * (len(ctx) - per)/(len(ctx) - 1) * ic_eng + (per - 1)/per * len(ctx)/(len(ctx) - 1) * 1/26
+    return 1/per * (per - len(ctx))/(len(ctx) - 1) * ic_eng + (per - 1)/per * len(ctx)/(len(ctx) - 1) * 1/26
 
 
-"""Substitution cipher related functions"""
-#
-# def sub():
-#
-#     return sub
-#
-#
-"""One-time pad related functions"""
+"""Substitution cipher related functions done manually"""
 
 
-# def pad():
-#
-#     return pad
-#
-#
+"""One-time pad related functions none since can't decrpyt"""
+
+
+
+
 """Permutation cipher related functions"""
 
 
-# def perm():
-#
-#     return perm
+def decrypttrans(key,string):
+    cols=math.ceil(len(string)/key)#the number of cols in transposition
+    
+    rows=key#number of rows in transposition
+    
+    emptyspace= (cols*rows) - len(string)
+    
+    plaintext= ['']*cols
+    
+    #pointing to next char in transposition grid
+    col=0
+    row=0
+    for col in range(0,cols):
+        plaintext= ['']*cols
+        for chars in string:
+            plaintext[col]+= chars
+            #go to next col
+            col+=1
+            #if no more cols reset and go to next row
+            #or at an empty space (place in grid with no cipher text)
+            if (col == cols) or (col == cols -1 and row >= rows-emptyspace):
+                col=0 #reset col
+                row+=1 #increase the row
+            
+        print('Trying key',key)
+        xp=''.join(plaintext)
+        print(xp)
+        print("Enter Q if this is plaintext otherwise press anything else")
+        x=input("--")
+        if x.strip().upper().startswith('Q'):
+            return ''.join(plaintext)     
+    return ''.join(plaintext)
+
+
+def iterkeys(string):
+    
+    for key in range(1,len(string)):
+        print('Trying key #',key)
+        
+        decrypt=decrypttrans(key, string)
+        print(decrypt)
+        print("Enter Q if this is plaintext otherwise press anything else")
+        x=input("--")
+        if x.strip().upper().startswith('Q'):
+            return decrypt
+    return None
+def transp(file):
+    data=file.read().replace('\n','')
+    file.seek(0,0)
+    
+    print(data)
+    
+    transtry=iterkeys(data)
+    if data == None:
+        print("Decryption failed")
+    else:
+        print("Decrypted text")
+        print(transtry)
