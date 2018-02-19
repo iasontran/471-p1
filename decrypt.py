@@ -24,7 +24,7 @@ def shift(freqs, file):
         new_index = flat(index - key)
         ptx += alphabet[new_index]
 
-    return ptx
+    return key,ptx
 
 
 def guess_key(freqs):
@@ -172,11 +172,11 @@ def kasiski(ctx):
         return
 
     kas = []
-    for ngram, occur in ngram:
+    for n_gram, occur in ngram:
         next_pos = 0
         for i in range(occur - 1):
-            curr_pos = ctx.find(ngram, next_pos)
-            next_pos = ctx.find(ngram, next_pos + 1)
+            curr_pos = ctx.find(n_gram, next_pos)
+            next_pos = ctx.find(n_gram, curr_pos + 1)
             dist = next_pos - curr_pos
 
             for period in range(2, dist + 1):
@@ -243,7 +243,7 @@ def compute_periods_with_ic(ctx, ic_ctx, periods=None):
 
 def expected_ic(ctx, per):
     """Calculates the expected index of coincidence given a specified period"""
-    return 1/per * (per - len(ctx))/(len(ctx) - 1) * ic_eng + (per - 1)/per * len(ctx)/(len(ctx) - 1) * 1/26
+    return 1/per * (len(ctx) - per)/(len(ctx) - 1) * ic_eng + (per - 1)/per * len(ctx)/(len(ctx) - 1) * 1/26
 
 
 """Substitution cipher related functions done manually"""
