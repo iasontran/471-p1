@@ -38,10 +38,9 @@ else:
     print("This is a substitution cipher, since our preliminary analysis of the ciphertexts shows there were no permutation ciphers")
     print("Also since substitution ciphers can be done manually assuming this is a shift cipher")
     #implement shift decrpyt here
-    shift=getshift(freqs)
-    decrypt=decryptshift(file, shift)
-    print(decrypt)
-    print("shift amount was", shift)
+    shift_key, shift_ptx = shift(nicef, file)
+    print(shift_ptx)
+    print("shift amount was", shift_key)
     p=input("Confirm if this is the plaintext, if not then this was a substitution cipher done manually. Press Q to quit")
     if p.strip().upper().startswith('Q'):
             sys.exit()

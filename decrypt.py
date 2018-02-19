@@ -22,7 +22,7 @@ def shift(freqs, file):
         index = alphabet.find(letter)
         new_index = flat(index - key)
         ptx += alphabet[new_index]
-    key = alphabet[key]
+    # key = alphabet[key]
 
     return key, ptx
 
