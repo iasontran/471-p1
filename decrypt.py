@@ -24,7 +24,7 @@ def shift(freqs, file):
         new_index = flat(index - key)
         ptx += alphabet[new_index]
 
-    return key, ptx
+    return key,ptx
 
 
 def guess_key(freqs):
@@ -243,7 +243,7 @@ def compute_periods_with_ic(ctx, ic_ctx, periods=None):
 
 def expected_ic(ctx, per):
     """Calculates the expected index of coincidence given a specified period"""
-    return 1 / per * (len(ctx) - per) / (len(ctx) - 1) * ic_eng + (per - 1) / per * len(ctx) / (len(ctx) - 1) * 1 / 26
+    return 1/per * (len(ctx) - per)/(len(ctx) - 1) * ic_eng + (per - 1)/per * len(ctx)/(len(ctx) - 1) * 1/26
 
 
 """Substitution cipher related functions done manually"""
