@@ -44,15 +44,3 @@ else:
     p=input("Confirm if this is the plaintext, if not then this was a substitution cipher done manually. Press Q to quit")
     if p.strip().upper().startswith('Q'):
             sys.exit()
-def transp():
-    data=file.read().replace('\n','')
-    file.seek(0,0)
-    
-    print(data)
-    
-    transtry=iterkeys(data)
-    if data == None:
-        print("Decryption failed")
-    else:
-        print("Decrypted text")
-        print(transtry)
